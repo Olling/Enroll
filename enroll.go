@@ -4,17 +4,21 @@ import (
 	"os"
 	"fmt"
 	"flag"
+	"path"
+	"strings"
 	"os/exec"
+	"net/url"
 	"net/http"
-	"github.com/Olling/Enroll/config"
 	"github.com/Olling/slog"
+	"github.com/Olling/Enroll/config"
 )
 
 func getHostname() string{
-	fqdn, err := exec.Command("/bin/hostname", "--fqdn").Output()
+	bytefqdn, err := exec.Command("/bin/hostname", "--fqdn").Output()
 
 	if err == nil {
-		return string(fqdn)
+		fqdn := strings.TrimSpace(string(bytefqdn))
+		return fqdn
 	}
 
 	hostname, err := os.Hostname()
@@ -27,11 +31,20 @@ func getHostname() string{
 	return hostname
 }
 
-func GetEnrolldStatus(fqdn string) {
-	r, err := http.Get(config.Configuration.URL + "/status/" + fqdn)
+func GetEnrolldStatus(serverid string) {
+	u, err := url.Parse(config.Configuration.URL)
+	if err != nil{
+		slog.PrintError("Failed to parse the url", err)
+		fmt.Println("Status: Unknown")
+		os.Exit(1)
+	}
+	u.Path = path.Join(u.Path, "status")
+	u.Path = path.Join(u.Path, serverid)
+
+	r, err := http.Get(u.String())
 
 	if err != nil{
-		slog.PrintError("Failed to get status", err)
+		slog.PrintError(err)
 		fmt.Println("Status: Unknown")
 		os.Exit(1)
 	}
@@ -56,27 +69,32 @@ func GetEnrolldStatus(fqdn string) {
 }
 
 func Enroll(p config.Payload) {
-	fmt.Println("NOT READY")
+	slog.PrintDebug("NOT READY")
 }
 
 func main() {
 	config.Initialize()
-	hostname := getHostname()
 
 	if config.Configuration.URL == "" {
 		slog.PrintError("No URL was provided")
 		os.Exit(1)
 	}
 
+	if config.Configuration.Payload.ServerID == "" {
+		config.Configuration.Payload.ServerID = getHostname()
+
+	}
+
 	if config.Status {
-		GetEnrolldStatus(hostname)
+		GetEnrolldStatus(config.Configuration.Payload.ServerID)
 		os.Exit(0)
 	}
 
 	if config.Enroll {
 		payload := config.GetPayload()
+
 		Enroll(payload)
-		GetEnrolldStatus(hostname)
+		GetEnrolldStatus(config.Configuration.Payload.ServerID)
 		os.Exit(0)
 	}
 

@@ -21,8 +21,8 @@ type fragment struct {
 }
 
 type Payload struct {
-	FQDN              string
-	NewServer         string
+	ServerID          string
+	NewServer         bool
 	Inventories       []string
 	AnsibleProperties map[string]string
 }
@@ -69,7 +69,7 @@ func GetPayload() (p Payload) {
 func LoadFragments(path string, output *Payload) {
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		slog.PrintError("Failed to load files from", path)
+		slog.PrintDebug("Failed to load files from", path)
 		return
 	}
 
@@ -94,6 +94,7 @@ func Initialize() {
 	flagConfigFragments := *flag.String("fragments","","Path to additional configuration files (enroll.d)")
 	Status = *flag.Bool("status", false, "Get current enrollment status")
 	Enroll = *flag.Bool("enroll", true, "Call the Enrolld server")
+	slog.SetLogLevel(3)
 	flag.Parse()
 
 	file, err := os.Open(ConfigPath)

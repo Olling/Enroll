@@ -2,23 +2,25 @@ package main
 
 import (
 	"os"
-	"log"
-	"time"
+	"fmt"
+	"flag"
+	"os/exec"
+	"net/http"
 	"github.com/Olling/Enroll/config"
-	l "github.com/Olling/Enroll/logging"
+	"github.com/Olling/slog"
 )
 
-func getHostname {
+func getHostname() string{
 	fqdn, err := exec.Command("/bin/hostname", "--fqdn").Output()
 
 	if err == nil {
-		return fqdn
+		return string(fqdn)
 	}
 
 	hostname, err := os.Hostname()
 
 	if err != nil {
-		l.ErrorLog.Println("Failed to get FQDN and hostname")
+		slog.PrintError("Failed to get FQDN and hostname")
 		os.Exit(1)
 	}
 
@@ -26,10 +28,10 @@ func getHostname {
 }
 
 func GetEnrolldStatus(fqdn string) {
-	r, err := http.Get(config.Configuration.URL + "/server/" + fqdn)
+	r, err := http.Get(config.Configuration.URL + "/status/" + fqdn)
 
 	if err != nil{
-		l.ErrorLog.Println("Failed to get status", err)
+		slog.PrintError("Failed to get status", err)
 		fmt.Println("Status: Unknown")
 		os.Exit(1)
 	}
@@ -39,38 +41,44 @@ func GetEnrolldStatus(fqdn string) {
 		os.Exit(0)
 	}
 
+	if r.StatusCode == 202 {
+		fmt.Println("Status: Enrolling")
+		os.Exit(0)
+	}
+
 	if r.StatusCode == 404 {
 		fmt.Println("Status: Not enrolled")
 		os.Exit(0)
 	}
 
 	fmt.Println("Status: Unknown")
-	os.Exit(1)
+	os.Exit(0)
 }
 
-func Post() {
+func Enroll(p config.Payload) {
 	fmt.Println("NOT READY")
 }
 
 func main() {
-	l.InitializeLogging(os.Stdout, os.Stderr)
 	config.Initialize()
 	hostname := getHostname()
 
-	if Configuration.URL == "" {
-		l.ErrorLog.Println("No URL was provided")
-		exit(1)
+	if config.Configuration.URL == "" {
+		slog.PrintError("No URL was provided")
+		os.Exit(1)
 	}
 
-	if Configuration.Status {
+	if config.Status {
 		GetEnrolldStatus(hostname)
+		os.Exit(0)
 	}
 
-	var p Payload
-	StructFromFile(config.Configuration.ConfigPath
+	if config.Enroll {
+		payload := config.GetPayload()
+		Enroll(payload)
+		GetEnrolldStatus(hostname)
+		os.Exit(0)
+	}
 
-
-	//	config.GetMainConfiguration("/etc/enroll/enroll.conf")
-	//config.GetAdditionalConfiguration("/etc/enroll/enroll.d")
-
+	flag.PrintDefaults()
 }

@@ -23,10 +23,13 @@ func getHostname() string{
 		return fqdn
 	}
 
+	slog.Debug("Failed to call '/bin/hostname --fqdn': ", err)
+
 	hostname, err := os.Hostname()
 
 	if err != nil {
 		slog.PrintError("Failed to get FQDN and hostname")
+		slog.Debug(err)
 		os.Exit(1)
 	}
 
@@ -121,6 +124,7 @@ func Enroll(p config.Payload) {
 }
 
 func main() {
+	slog.SetLogLevel(3)
 	config.Initialize()
 
 	if config.Configuration.URL == "" {
@@ -133,7 +137,7 @@ func main() {
 
 	}
 
-	if config.Status {
+	if *config.Status {
 		GetEnrolldStatus(config.Configuration.Payload.ServerID)
 		os.Exit(0)
 	}

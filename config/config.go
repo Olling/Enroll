@@ -10,9 +10,9 @@ import (
 
 var (
 	Configuration	configuration
-	Status		bool
-	Enroll		bool
-	ConfigPath	string
+	Status		*bool
+	Enroll		*bool
+	ConfigPath	*string
 )
 
 type fragment struct {
@@ -89,31 +89,32 @@ func LoadFragments(path string, output *Payload) {
 }
 
 func Initialize() {
-	flagURL := *flag.String("url","","Enrolld host url")
-	ConfigPath := *flag.String("config","/etc/enroll/enroll.conf","Main configuration file (enroll.conf)")
-	flagConfigFragments := *flag.String("fragments","","Path to additional configuration files (enroll.d)")
-	Status = *flag.Bool("status", false, "Get current enrollment status")
-	Enroll = *flag.Bool("enroll", true, "Call the Enrolld server")
-	slog.SetLogLevel(3)
+	flagURL := flag.String("url","","Enrolld host url")
+	ConfigPath := flag.String("config","/etc/enroll/enroll.conf","Main configuration file (enroll.conf)")
+	flagConfigFragments := flag.String("fragments","","Path to additional configuration files (enroll.d)")
+	Status = flag.Bool("status", false, "Get current enrollment status")
+	Enroll = flag.Bool("enroll", true, "Call the Enrolld server")
+
 	flag.Parse()
 
-	file, err := os.Open(ConfigPath)
+	file, err := os.Open(*ConfigPath)
 	if err != nil {
-		slog.PrintError("Failed to load config (" + ConfigPath + "):", err)
+		slog.PrintError("Failed to load config (" + *ConfigPath + "):", err)
 		os.Exit(1)
 	}
 
 	err = json.NewDecoder(file).Decode(&Configuration)
 	if err != nil {
-		slog.PrintError("Failed to decode config (" + ConfigPath + "):", err)
+		slog.PrintError("Failed to decode config (" + *ConfigPath + "):", err)
 	}
+
 	file.Close()
 
-	if flagConfigFragments != "" && Configuration.ConfigFragments != "" {
-		Configuration.ConfigFragments = flagConfigFragments
+	if *flagConfigFragments != "" && Configuration.ConfigFragments != "" {
+		Configuration.ConfigFragments = *flagConfigFragments
 	}
 
-	if flagURL != "" {
-		Configuration.URL = flagURL
+	if *flagURL != "" {
+		Configuration.URL = *flagURL
 	}
 }

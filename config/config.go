@@ -16,15 +16,15 @@ var (
 )
 
 type fragment struct {
-	Inventories       []string
-	AnsibleProperties map[string]string
+	Groups		[]string
+	Properties	map[string]string
 }
 
 type Payload struct {
-	ServerID          string
-	NewServer         bool
-	Inventories       []string
-	AnsibleProperties map[string]string
+	ServerID		string
+	NewServer		bool
+	Groups			[]string
+	Properties		map[string]string
 }
 
 type configuration struct {
@@ -79,12 +79,12 @@ func LoadFragments(path string, output *Payload) {
 		var f fragment
 		FileToStruct(filepath, f)
 
-		output.Inventories = append(output.Inventories, f.Inventories...)
+		output.Groups = append(output.Groups, f.Groups...)
 
-		for key, value := range output.AnsibleProperties {
-			f.AnsibleProperties[key] = value
+		for key, value := range output.Properties {
+			f.Properties[key] = value
 		}
-		output.AnsibleProperties = f.AnsibleProperties
+		output.Properties = f.Properties
 	}
 }
 

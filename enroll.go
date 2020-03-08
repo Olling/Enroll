@@ -65,7 +65,7 @@ func GetEnrolldStatus(serverid string) {
 	}
 
 	fmt.Println("Status: Unknown")
-	os.Exit(0)
+	os.Exit(1)
 }
 
 func CreateURL(baseURL string, function string, serverid string) (string, error) {

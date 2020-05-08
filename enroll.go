@@ -36,6 +36,7 @@ func getHostname() string{
 	return hostname
 }
 
+
 func GetEnrolldStatus(serverid string) {
 	url, err := CreateURL(config.Configuration.URL, "status", serverid)
 	if err != nil{
@@ -57,7 +58,7 @@ func GetEnrolldStatus(serverid string) {
 		os.Exit(0)
 	}
 
-	if resp.StatusCode == 202 {
+	if resp.StatusCode == 208 {
 		fmt.Println("Status: Enrolling")
 		os.Exit(0)
 	}
@@ -70,6 +71,7 @@ func GetEnrolldStatus(serverid string) {
 	fmt.Println("Status: Unknown")
 	os.Exit(1)
 }
+
 
 func CreateURL(baseURL string, function string, serverid string) (string, error) {
 	u, err := url.Parse(baseURL)
